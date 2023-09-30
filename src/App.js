@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { API_URL } from "./constants";
 
 function App() {
@@ -9,9 +9,8 @@ function App() {
   const [summary, setSummary] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
   const [mcqs, setMcqs] = useState("");
-  const [q1, setQ1] = useState("");
-  const [q2, setQ2] = useState("");
-  const [text, setText] = useState("");
+  const [questions, setQuestions] = useState([]);
+  const [text, setText] = useState('');
 
 
   const handleFileSelect = (event) => {
@@ -31,7 +30,6 @@ function App() {
     formData.append('pdf_file', file);
     formData.append('max_word', maxWord)
 
-
     try {
       // Replace 'YOUR_DJANGO_API_URL' with the actual URL of your Django API endpoint for uploading PDFs and generating summaries.
       const response = await axios.post('http://localhost:8000/api/summary/', formData, {
@@ -43,7 +41,8 @@ function App() {
         alert(response.data.message);
         console.log(response.data);
         setSummary(response.data.summary);
-        splitText();
+        setMcqs(response.data.mcqs);
+        handleText();
         setShowSummary(true);
         setSubmitting(false);
         // setFile(null);
@@ -61,67 +60,22 @@ function App() {
   };
 
 
+  const handleText = async () => {
+    const sampleText = mcqs;
 
+    setText(sampleText);
 
-  // Function to split the text into chunks at the points where MCQs and questions are inserted
-  const splitText = () => {
-    // Split the summary into lines
-    const lines = summary?.split('\n');
+    // Split the text into questions
+    const questionRegex = /Q\d+\..*?(?=Q\d+|$)/gs;
+    const questionMatches = sampleText.match(questionRegex);
 
-    // Initialize variables to store extracted parts
-    let extractedText = "";
-    let extractedMCQs = "";
-    let extractedQ1 = "";
-    let extractedQ2 = "";
-
-    let isMCQSection = false;
-    let isQ1Section = false;
-    let isQ2Section = false;
-
-    // Iterate through the lines and categorize the content
-    for (const line of lines) {
-      if (line.startsWith("MCQ Questions:")) {
-        isMCQSection = true;
-        isQ1Section = false;
-        isQ2Section = false;
-      } else {
-        if (isMCQSection) {
-          extractedMCQs += line + '\n';
-        } else if (isQ1Section) {
-          extractedQ1 += line + '\n';
-        } else if (isQ2Section) {
-          extractedQ2 += line + '\n';
-        } else {
-          extractedText += line + '\n';
-        }
-      }
+    if (questionMatches) {
+      const extractedQuestions = questionMatches.map((match) => match.trim());
+      setQuestions(extractedQuestions);
     }
+  }
 
-    // Update state with the extracted content
-    setText(extractedText.trim());
-    setMcqs(extractedMCQs.trim());
 
-    // Split the MCQs into lines
-    const lines2 = mcqs?.split('\n');
-
-    for (const line of lines2) {
-      if (line.startsWith("Q1.") || line.startsWith("1.")) {
-        isQ1Section = true;
-        isQ2Section = false;
-      } else if (line.startsWith("Q2.") || line.startsWith("2.")) {
-        isQ1Section = false;
-        isQ2Section = true;
-      } else {
-        if (isQ1Section) {
-          extractedQ1 += line + '\n';
-        } else if (isQ2Section) {
-          extractedQ2 += line + '\n';
-        }
-      }
-    }
-    setQ1(extractedQ1.trim());
-    setQ2(extractedQ2.trim());
-  };
 
 
   return (
@@ -192,25 +146,21 @@ function App() {
             <div className="flex items-center">
               {showSummary && (
                 <div className="text-sm">
-                  <div>
-                    <p>{text}</p>
-                  </div>
-                  {/* <div>
-                    <p>{mcqs}</p>
-                  </div> */}
-                  <hr />
-                  <h3>
-                    MCQs
-                  </h3>
-                  {/* <div>
-                    <p>{mcqs}</p>
-                  </div> */}
-                  <div>
-                    <p>{q1}</p>
-                  </div>
-                  <div>
-                    <p>{q2}</p>
-                  </div>
+                  <p className="font-medium text-gray-900">Summary</p>
+                  <p className="text-gray-500">{summary}</p>
+                  
+                 
+                      <div className="mt-2">
+                    <h1>Extracted Questions</h1>
+                    {questions.map((q, index) => (
+                      <div key={index}>
+                        <p>{q}</p>
+                      </div>
+                    ))}
+                     
+                      </div>
+                   
+
                 </div>
               )}
             </div>
