@@ -8,6 +8,11 @@ function App() {
   const [maxWord, setMaxWord] = useState(50)
   const [summary, setSummary] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
+  const [mcqs, setMcqs] = useState("");
+  const [q1, setQ1] = useState("");
+  const [q2, setQ2] = useState("");
+  const [text, setText] = useState("");
+
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -38,6 +43,7 @@ function App() {
         alert(response.data.message);
         console.log(response.data);
         setSummary(response.data.summary);
+        splitText();
         setShowSummary(true);
         setSubmitting(false);
         // setFile(null);
@@ -53,6 +59,70 @@ function App() {
       alert('Error uploading PDF:', error || error.message);
     }
   };
+
+
+
+
+  // Function to split the text into chunks at the points where MCQs and questions are inserted
+  const splitText = () => {
+    // Split the summary into lines
+    const lines = summary?.split('\n');
+
+    // Initialize variables to store extracted parts
+    let extractedText = "";
+    let extractedMCQs = "";
+    let extractedQ1 = "";
+    let extractedQ2 = "";
+
+    let isMCQSection = false;
+    let isQ1Section = false;
+    let isQ2Section = false;
+
+    // Iterate through the lines and categorize the content
+    for (const line of lines) {
+      if (line.startsWith("MCQ Questions:")) {
+        isMCQSection = true;
+        isQ1Section = false;
+        isQ2Section = false;
+      } else {
+        if (isMCQSection) {
+          extractedMCQs += line + '\n';
+        } else if (isQ1Section) {
+          extractedQ1 += line + '\n';
+        } else if (isQ2Section) {
+          extractedQ2 += line + '\n';
+        } else {
+          extractedText += line + '\n';
+        }
+      }
+    }
+
+    // Update state with the extracted content
+    setText(extractedText.trim());
+    setMcqs(extractedMCQs.trim());
+
+    // Split the MCQs into lines
+    const lines2 = mcqs?.split('\n');
+
+    for (const line of lines2) {
+      if (line.startsWith("Q1.") || line.startsWith("1.")) {
+        isQ1Section = true;
+        isQ2Section = false;
+      } else if (line.startsWith("Q2.") || line.startsWith("2.")) {
+        isQ1Section = false;
+        isQ2Section = true;
+      } else {
+        if (isQ1Section) {
+          extractedQ1 += line + '\n';
+        } else if (isQ2Section) {
+          extractedQ2 += line + '\n';
+        }
+      }
+    }
+    setQ1(extractedQ1.trim());
+    setQ2(extractedQ2.trim());
+  };
+
 
   return (
     <>
@@ -122,9 +192,25 @@ function App() {
             <div className="flex items-center">
               {showSummary && (
                 <div className="text-sm">
-                  <p className="font-semibold text-indigo-600 hover:text-indigo-500">
-                    {summary}
-                  </p>
+                  <div>
+                    <p>{text}</p>
+                  </div>
+                  {/* <div>
+                    <p>{mcqs}</p>
+                  </div> */}
+                  <hr />
+                  <h3>
+                    MCQs
+                  </h3>
+                  {/* <div>
+                    <p>{mcqs}</p>
+                  </div> */}
+                  <div>
+                    <p>{q1}</p>
+                  </div>
+                  <div>
+                    <p>{q2}</p>
+                  </div>
                 </div>
               )}
             </div>
