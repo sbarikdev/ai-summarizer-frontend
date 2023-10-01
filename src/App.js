@@ -6,7 +6,7 @@ function App() {
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [maxWord, setMaxWord] = useState(50)
-  const [summary, setSummary] = useState(null);
+  const [summary, setSummary] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [mcqs, setMcqs] = useState("");
   const [questions, setQuestions] = useState([]);
@@ -59,6 +59,17 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    axios.get('http://localhost:8000/api/summary-fetch/109').then((response) => {
+      console.log(response.data);
+      setSummary(response.data.summary);
+      setMcqs(response.data.mcqs);
+      handleText();
+      setShowSummary(true);
+
+    });
+  }, []);
+
 
   const handleText = async () => {
     const sampleText = mcqs;
@@ -74,8 +85,6 @@ function App() {
       setQuestions(extractedQuestions);
     }
   }
-
-
 
 
   return (
@@ -108,16 +117,11 @@ function App() {
               />
             </div>
           </div>
-
-
-
-
           <div>
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                 Summary Size
               </label>
-
             </div>
             <div className="mt-2">
               <input
@@ -134,11 +138,17 @@ function App() {
 
           <div>
             <button
-              disabled={submitting}
               onClick={handleUpload}
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className={`flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold leading-6 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-300 ${submitting
+                  ? 'bg-gray-300 cursor-not-allowed' // Disable the button and change the background color
+                  : 'bg-indigo-500 hover:bg-indigo-300 text-white'
+                }`}
             >
-              Get Summary
+              {submitting ? (
+                <div className="animate-spin h-5 w-5 mr-2 border-t-2 border-b-2 border-gray-500"></div>
+              ) : (
+                'Get Summary'
+              )}
             </button>
           </div>
 
@@ -147,31 +157,30 @@ function App() {
               {showSummary && (
                 <div className="text-sm">
                   <p className="font-medium text-gray-900">Summary</p>
+                  <div>
+                    <button
+                      className="flex ml-auto my-5 rounded-md bg-orange-600 px-5 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-brown-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    >
+                      Generate PDF
+                    </button>
+                  </div>
                   <p className="text-gray-500">{summary}</p>
-                  
-                 
-                      <div className="mt-2">
-                    <h1>Extracted Questions</h1>
-                    {questions.map((q, index) => (
-                      <div key={index}>
-                        <p>{q}</p>
-                      </div>
-                    ))}
-                     
-                      </div>
-                   
 
+
+                  <div className="mt-2">
+                    <h1>Extracted Questions</h1>
+
+                    {questions.map((q, index) => (
+
+                      <p style={{ whiteSpace: 'pre-line', marginBottom: '10px' }}>
+                        {q}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* <p className="mt-10 text-center text-sm text-gray-500">
-            Not a member?{' '}
-            <a href="#" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
-              Start a 14 day free trial
-            </a>
-          </p> */}
         </div>
       </div>
     </>
