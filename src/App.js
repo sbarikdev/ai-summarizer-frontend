@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { API_URL } from "./constants";
+import generatePDF from 'react-to-pdf';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -11,6 +12,8 @@ function App() {
   const [mcqs, setMcqs] = useState("");
   const [questions, setQuestions] = useState([]);
   const [text, setText] = useState('');
+  const targetRef = React.useRef(null);
+
 
 
   const handleFileSelect = (event) => {
@@ -140,8 +143,8 @@ function App() {
             <button
               onClick={handleUpload}
               className={`flex w-full justify-center rounded-md px-3 py-1.5 text-sm font-semibold leading-6 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-300 ${submitting
-                  ? 'bg-gray-300 cursor-not-allowed' // Disable the button and change the background color
-                  : 'bg-indigo-500 hover:bg-indigo-300 text-white'
+                ? 'bg-gray-300 cursor-not-allowed' // Disable the button and change the background color
+                : 'bg-indigo-500 hover:bg-indigo-300 text-white'
                 }`}
             >
               {submitting ? (
@@ -156,27 +159,33 @@ function App() {
             <div className="flex items-center">
               {showSummary && (
                 <div className="text-sm">
-                  <p className="font-medium text-gray-900">Summary</p>
                   <div>
                     <button
+                      onClick={() => generatePDF(targetRef, { filename: 'summary.pdf' })}
                       className="flex ml-auto my-5 rounded-md bg-orange-600 px-5 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-brown-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     >
                       Generate PDF
                     </button>
                   </div>
-                  <p className="text-gray-500">{summary}</p>
+                  <div ref={targetRef} className="bg-white rounded-lg shadow px-5 py-6 sm:px-6"
+                  >
+
+                    <p className="font-medium text-gray-900">Summary</p>
+
+                    <p className="text-gray-500">{summary}</p>
 
 
-                  <div className="mt-2">
-                    <h1>Extracted Questions</h1>
+                    <div className="mt-2" >
+                      <h1>Extracted Questions</h1>
 
-                    {questions.map((q, index) => (
+                      {questions.map((q, index) => (
 
-                      <p style={{ whiteSpace: 'pre-line', marginBottom: '10px' }}>
-                        {q}
-                      </p>
-                    ))}
-                  </div>
+                        <p style={{ whiteSpace: 'pre-line', margin: '10px' }}>
+                          {q}
+                        </p>
+                      ))}
+                    </div>
+                 </div>
                 </div>
               )}
             </div>
